@@ -50,6 +50,9 @@ for(i in 1:(nrow(nodes)-1)){
 }
 
 
+# 43 possible routes 
+# 17 with one less row
+
 pathloss <- c()
 
 for(i in 1:length(pathSpeed)){
