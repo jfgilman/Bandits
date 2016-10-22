@@ -1,0 +1,149 @@
+---
+title: "Bandit study group"
+author: "Eric B. Laber"
+date: "May 22, 2016"
+output: html_document
+---
+
+###Basic bandit simulations
+We consider a bandit algorithm with $K$ arms labeled $1,\ldots, K$.  First, 
+lets compute the pseudo-regret for uniform guessing, i.e., $\left\lbrace I_t 
+\right\rbrace_{t\ge 1}$ are i.i.d. with $I_t \sim
+\mathrm{Uniform}\left\lbrace 1,\ldots, K\right\rbrace$. 
+
+```{r}
+library (ggplot2);
+### We'll assume K=5 arms each with a beta-distn 
+K = 5;
+alphaSeq = c(5, 4.85, 4.5, 4.5, 1);
+betaSeq = c(1, 1.2, 1.5, 3, 1);
+muStar= 5/6;  # mean is alpha/(alpha + beta)
+nSteps = 100;
+regret = numeric (nSteps);
+arms = numeric (nSteps);
+for (i in 1:nSteps){
+  arm = sample (K, size=1);
+  arms[i] = arm;
+  regret[i] = muStar - rbeta (1, shape1=alphaSeq[arm], shape2=betaSeq[arm]);
+}
+
+group = rep(1:K, nSteps);
+val = numeric(K*nSteps);
+tm = numeric (K*nSteps);
+for (j in 1:K){
+  armTotal = cumsum(arms==j);
+  for (i in 1:nSteps){
+    ind = (i-1)*K + j;
+    val[ind] = armTotal[i];
+    tm[ind] = i;
+  }
+}
+plotDF = data.frame(time=tm, val=val, group=group);
+
+plot(cumsum(regret), type='l', xlab="steps", ylab="regret");
+ggplot (plotDF, aes(x=time, y=val, group=group, fill=group)) + geom_area(position="fill");
+
+
+```
+
+
+
+For our second bandit example, we'll sample each arm $m$ times and then choose
+the argmax thereafter.  
+
+
+```{r}
+K = 5;
+alphaSeq = c(5, 4.85, 4.5, 4.5, 1);
+betaSeq = c(1, 1.2, 1.5, 3, 1);
+muStar= 5/6;  # mean is alpha/(alpha + beta)
+m = 15;
+nSteps = 250;
+regret = numeric (nSteps);
+arms = numeric (nSteps);
+muHat = numeric (K);
+for (i in 1:(m*K)){
+  arm = (i %% K) + 1;
+  arms[i] = arm;
+  xt  = rbeta (1, shape1=alphaSeq[arm], shape2=betaSeq[arm]);
+  muHat[arm] = muHat[arm] + xt;
+  regret[i] = muStar - xt;
+}
+
+armHat = which.max(muHat);
+for (i in (m*K+1):nSteps){
+  arm = armHat;  # constant 
+  arms[i] = arm;
+  regret[i] = muStar - rbeta (1, shape1=alphaSeq[arm], shape2=betaSeq[arm]);
+}
+
+
+group = rep(1:K, nSteps);
+val = numeric(K*nSteps);
+tm = numeric (K*nSteps);
+for (j in 1:K){
+  armTotal = cumsum(arms==j);
+  for (i in 1:nSteps){
+    ind = (i-1)*K + j;
+    val[ind] = armTotal[i];
+    tm[ind] = i;
+  }
+}
+plotDF = data.frame(time=tm, val=val, group=group);
+
+plot(cumsum(regret), type='l', xlab="steps", ylab="regeret");
+ggplot (plotDF, aes(x=time, y=val, group=group, fill=group)) + geom_area(position="fill");
+
+```
+
+
+Now let's apply UCB with $\alpha=2.5$ and $\psi(\lambda) = \lambda^2/8$.  
+
+
+```{r}
+K = 5;
+alphaSeq = c(5, 4.85, 4.5, 4.5, 1);
+betaSeq = c(1, 1.2, 1.5, 3, 1);
+muStar= 5/6;  # mean is alpha/(alpha + beta)
+nSteps = 5000;
+regret = numeric (nSteps);
+arms = numeric (nSteps);
+muSum = numeric (K);
+nt = numeric (K);
+for (i in 1:nSteps){
+  mt = which(nt == 0);
+  if (length(mt) > 0){
+    arm = sample (mt, size=1);
+  } else{
+    aMax = which.max (muSum/nt + sqrt(20*log(i)/nt));
+    arm = sample (aMax, size=1);
+  }
+  
+  nt[arm] = nt[arm] + 1;
+  arms[i] = arm;
+  xt = rbeta (1, shape1=alphaSeq[arm], shape2=betaSeq[arm]);
+  muSum[arm] = muSum[arm] + xt; 
+  regret[i] = muStar - xt;
+  }
+
+group = rep(1:K, nSteps);
+val = numeric(K*nSteps);
+tm = numeric (K*nSteps);
+for (j in 1:K){
+  armTotal = cumsum(arms==j);
+  for (i in 1:nSteps){
+    ind = (i-1)*K + j;
+    val[ind] = armTotal[i];
+    tm[ind] = i;
+  }
+}
+plotDF = data.frame(time=tm, val=val, group=group);
+
+plot(cumsum(regret), type='l', xlab="steps", ylab="regeret");
+ggplot (plotDF, aes(x=time, y=val, group=group, fill=group)) + geom_area(position="fill");
+
+
+```
+
+
+
