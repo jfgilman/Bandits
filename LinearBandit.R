@@ -26,21 +26,25 @@ points(nodes, pch=19)
 points(1,2, pch=15, cex = 2)
 points(6,2,col=2,pch=15, cex = 2)
 
+# for(i in 1:(nrow(nodes)-1)){
+#   segments(nodes[i,1],nodes[i,2], nodes[i,1]+1, 2)
+#   if(i < 11){
+#     if(nodes[i,2] != 1){
+#       segments(nodes[i,1],nodes[i,2], nodes[i,1]+1, 3)
+#     }
+#     if(nodes[i,2] != 3){
+#       segments(nodes[i,1],nodes[i,2], nodes[i,1]+1, 1)
+#     }
+#   }
+# }
+
 for(i in 1:(nrow(nodes)-1)){
   segments(nodes[i,1],nodes[i,2], nodes[i,1]+1, 2)
   if(i < 11){
-    if(nodes[i,2] != 1){
-      segments(nodes[i,1],nodes[i,2], nodes[i,1]+1, 3)
-    }
-    if(nodes[i,2] != 3){
-      segments(nodes[i,1],nodes[i,2], nodes[i,1]+1, 1)
-    }
+    segments(nodes[i,1],nodes[i,2], nodes[i,1]+1, 3)
+    segments(nodes[i,1],nodes[i,2], nodes[i,1]+1, 1)
   }
 }
-
-
-
-
 
 
 # Now set up reward structure for the 36 different paths
@@ -48,35 +52,54 @@ for(i in 1:(nrow(nodes)-1)){
 # 3 is fast (Green)
 # 4 is average (Blue)
 
-pathSpeed <- sample(2:4,27, replace = T)
+# pathSpeed <- sample(2:4,27, replace = T)
+# 
+# pathNum <- 1
+# 
+# for(i in 1:(nrow(nodes)-1)){
+# 
+#   segments(nodes[i,1],nodes[i,2], nodes[i,1]+1, 2, col = pathSpeed[pathNum])
+# 
+#   pathNum = pathNum + 1
+# 
+#   if(i < 11){
+#     if(nodes[i,2] != 1){
+#       segments(nodes[i,1],nodes[i,2], nodes[i,1]+1, 3, col = pathSpeed[pathNum])
+# 
+#       pathNum = pathNum + 1
+#     }
+#     if(nodes[i,2] != 3){
+#       segments(nodes[i,1],nodes[i,2], nodes[i,1]+1, 1, col = pathSpeed[pathNum])
+# 
+#       pathNum = pathNum + 1
+#     }
+#   }
+# }
+
+pathSpeed <- sample(2:4,33, replace = T)
 
 pathNum <- 1
 
 for(i in 1:(nrow(nodes)-1)){
-  
-  segments(nodes[i,1],nodes[i,2], nodes[i,1]+1, 2, col = pathSpeed[pathNum])
-  
-  pathNum = pathNum + 1
-  
   if(i < 11){
-    if(nodes[i,2] != 1){
-      segments(nodes[i,1],nodes[i,2], nodes[i,1]+1, 3, col = pathSpeed[pathNum])
-      
-      pathNum = pathNum + 1
-    }
-    if(nodes[i,2] != 3){
-      segments(nodes[i,1],nodes[i,2], nodes[i,1]+1, 1, col = pathSpeed[pathNum])
-      
-      pathNum = pathNum + 1
-    }
+
+    segments(nodes[i,1],nodes[i,2], nodes[i,1]+1, 1, col = pathSpeed[pathNum])
+    pathNum = pathNum + 1
+
+    segments(nodes[i,1],nodes[i,2], nodes[i,1]+1, 2, col = pathSpeed[pathNum])
+    pathNum = pathNum + 1
+
+    segments(nodes[i,1],nodes[i,2], nodes[i,1]+1, 3, col = pathSpeed[pathNum])
+    pathNum = pathNum + 1
+
+  } else{
+    segments(nodes[i,1],nodes[i,2], nodes[i,1]+1, 2, col = pathSpeed[pathNum])
+    pathNum = pathNum + 1
   }
 }
 
 legend(1, 3.5, legend=c("Slow", "Moderate", "Fast"),
        col=c("red", "blue", "Green"),lty = 1, cex=1)
-
-
-
 
 pathloss <- c()
 
@@ -91,56 +114,66 @@ for(i in 1:length(pathSpeed)){
 }
 
 
-# 43 possible routes 
+
+
+# 81 possible routes 
 # matrix of possible paths
 
-routes <- matrix(0, nrow = 43, ncol = 27)
+moveCombos <- expand.grid(c(1,2,3),c(4:12), c(13:21), c(22:30), c(31:33))
 
-2,9,16,23,27
-2,9,16,24,26
-2,9,17,21,27
-2,9,17,20,26
-2,9,17,22,25
-2,10,14,23,27
-2,10,14,24,26
-2,10,13,21,27
-2,10,13,20,26
-2,10,13,22,25
-2,10,15,19,26
-2,10,15,18,25
-1,8,11,18,25
-1,8,11,19,26
-1,8,12,22,25
-1,8,12,20,26
-1,8,12,21,27
-1,6,15,18,25
-1,6,15,19,26
-1,6,13,22,25
-1,6,13,20,26
-1,6,13,21,27
-1,6,14,24,26
-1,6,14,23,27
-1,7,16,23,27
-1,7,16,24,26
-1,7,17,21,27
-1,7,17,20,26
-1,7,17,22,25
-3,4,11,18,25
-3,4,11,19,26
-3,4,12,22,25
-3,4,12,20,26
-3,4,12,21,27
-3,5,15,18,25
-3,5,15,19,26
-3,5,13,22,25
-3,5,13,20,26
-3,5,13,21,27
-3,5,14,24,26
-3,5,14,23,27
+br <- rep(0,nrow(moveCombos))
 
+badRows <- function(mat){
+  for(i in 1:nrow(mat)){
+    if(mat[i,1] == 1 && !(mat[i,2] %in% c(4,5,6))){
+      br[i] <- 1
+    } else if (mat[i,1] == 2 && !(mat[i,2] %in% c(7,8,9))){
+      br[i] <- 1
+    } else if (mat[i,1] == 3 && !(mat[i,2] %in% c(10,11,12))){
+      br[i] <- 1
+    }
+    
+    if(mat[i,2] %in% c(4,7,10) && !(mat[i,3] %in% c(13,14,15))){
+      br[i] <- 1
+    } else if (mat[i,2] %in% c(5,8,11) && !(mat[i,3] %in% c(16,17,18))){
+      br[i] <- 1
+    } else if (mat[i,2] %in% c(6,9,12) && !(mat[i,3] %in% c(19,20,21))){
+      br[i] <- 1
+    }
+    
+    if(mat[i,3] %in% c(13,16,19) && !(mat[i,4] %in% c(22,23,24))){
+      br[i] <- 1
+    } else if (mat[i,3] %in% c(14,17,20) && !(mat[i,4] %in% c(25,26,27))){
+      br[i] <- 1
+    } else if (mat[i,3] %in% c(15,18,21) && !(mat[i,4] %in% c(28,29,30))){
+      br[i] <- 1
+    }
+    
+    if(mat[i,4] %in% c(22,25,28) && !(mat[i,5] == 31)){
+      br[i] <- 1
+    } else if (mat[i,4] %in% c(23,26,29) && !(mat[i,5] == 32)){
+      br[i] <- 1
+    } else if (mat[i,4] %in% c(24,27,30) && !(mat[i,5] == 33)){
+      br[i] <- 1
+    }
+  }
+  
+  
+  return(br)
+}
 
+drop <- badRows(moveCombos)
 
+routes <- moveCombos[-which(drop == 1),]
 
+binaryRoutes <- matrix(0, nrow = 81, ncol = 33)
 
+for(i in 1:81){
+  for(j in 1:5){
+    binaryRoutes[i, routes[i,j]] <- 1
+  }
+}
 
+sum(binaryRoutes)
+which(binaryRoutes%*%pathloss == min(binaryRoutes%*%pathloss))
 
