@@ -24,7 +24,7 @@ nodes <- matrix(c(c(1,2),
 
 points(nodes, pch=19)
 points(1,2, pch=15, cex = 2)
-points(6,2,col=2,pch=15, cex = 2)
+points(6,2,col=5,pch=15, cex = 2)
 
 # for(i in 1:(nrow(nodes)-1)){
 #   segments(nodes[i,1],nodes[i,2], nodes[i,1]+1, 2)
@@ -101,18 +101,21 @@ for(i in 1:(nrow(nodes)-1)){
 legend(1, 3.5, legend=c("Slow", "Moderate", "Fast"),
        col=c("red", "blue", "Green"),lty = 1, cex=1)
 
-pathloss <- c()
+pathObsLoss <- c()
+pathELoss <- c()
 
 for(i in 1:length(pathSpeed)){
   if(pathSpeed[i] == 3){
-    pathloss[i] <- runif(1,.1,.5)
+    pathObsLoss[i] <- runif(1,.1,.5)
+    pathELoss[i] <- .3
   } else if(pathSpeed[i] == 4){
-    pathloss[i] <- runif(1,.3,.8)
+    pathObsLoss[i] <- runif(1,.3,.8)
+    pathELoss[i] <- .55
   } else {
-    pathloss[i] <- runif(1,.55,1)
+    pathObsLoss[i] <- runif(1,.55,1)
+    pathELoss[i] <- .775
   }
 }
-
 
 
 
@@ -174,6 +177,5 @@ for(i in 1:81){
   }
 }
 
-sum(binaryRoutes)
-which(binaryRoutes%*%pathloss == min(binaryRoutes%*%pathloss))
+which(binaryRoutes%*%pathObsLoss == min(binaryRoutes%*%pathObsLoss))
 
