@@ -128,45 +128,49 @@ pSize <- rep(.5,33)
 pull <- function(route, pSize, iter = NULL){
   
   allObsLoss <- c()
-  allELoss <- c()
   
   routeObsLoss <- rep(NA, 33)
   
-  pSize <- pSize + route*.02
+  pSize <- pSize + route*.01
   
-  drawPaths(pSpeed,pSize, iter)
+  if(iter %% 10 == 0){
+    drawPaths(pSpeed,pSize, iter)
+    Sys.sleep(.1)
+  }
   
   
   for(i in 1:length(pathSpeed)){
     if(pSpeed[i] == 3){
       allObsLoss[i] <- runif(1,.1,.5)
-      allELoss[i] <- .3
     } else if(pSpeed[i] == 4){
       allObsLoss[i] <- runif(1,.3,.8)
-      allELoss[i] <- .55
     } else {
-      allObsLoss[i] <- runif(1,.55,1)
-      allELoss[i] <- .775
+      allObsLoss[i] <- runif(1,.6,1)
     }
   }
   
-  return(list(loss = allObsLoss, size = pSize, expectedLoss = allELoss))
+  return(list(loss = allObsLoss, size = pSize))
   
 }
 
-for(i in 1:100){
-  
-  arm <- sample(1:81, 1)
-  pSize <- pull(binaryRoutes[arm,], pSize, i)$size
-  Sys.sleep(.2)
-  
+expectedLoss <- c()
+
+for(i in 1:length(pathSpeed)){
+  if(pSpeed[i] == 3){
+    expectedLoss[i] <- .3
+  } else if(pSpeed[i] == 4){
+    expectedLoss[i] <- .55
+  } else {
+    expectedLoss[i] <- .8
+  }
 }
+
 
 library(MASS)
 
-n <- 1000
+n <- 5000
 
-P <- matrix(0, nrow = 81, ncol = n)
+P <- matrix(0, nrow = 81, ncol = n + 1)
 
 P[,1] <- rep(1/81,81)
 
@@ -176,18 +180,10 @@ X[,1] <- binaryRoutes[sample(1:81, 1, prob = P[,1]),]
 
 CL <- matrix(0, nrow = 81, ncol = n)
 
-Pt <- matrix(0, nrow = 33, ncol = 33)
-for(i in 1:81){
-  Pt <- Pt + P[i,1]*outer(binaryRoutes[i,], binaryRoutes[i,]) 
-}
-
-
 
 nu <- sqrt(log(81)/(3*n*33))
 
 pSize <- rep(.5,33)
-
-expectedLoss <- rep(0,33)
 
 for(i in 1:n){ 
   X[,i] <- binaryRoutes[sample(1:81, 1, prob = P[,i]),]
@@ -198,7 +194,13 @@ for(i in 1:n){
   
   pSize <- out$size
   
-  lest <- (as.numeric(t(X[,1]) %*% ObsL)) * ginv(Pt) %*% X[,i]
+  Pt <- matrix(0, nrow = 33, ncol = 33)
+  for(j in 1:81){
+    Pt <- Pt + P[j,i]*outer(binaryRoutes[j,], binaryRoutes[j,]) 
+  }
+  
+  
+  lest <- ginv(Pt) %*% outer(X[,i], X[,i]) %*% ObsL
   
   if(i > 1){
     for(j in 1:81){
@@ -218,12 +220,11 @@ for(i in 1:n){
     }
   }
   
-  Sys.sleep(.1)
+
 }
 
+which(P[,n+1] == max(P[,n+1]))
 
-which(P[,n] == max(P[,n]))
+which(binaryRoutes%*%expectedLoss == min(binaryRoutes%*%expectedLoss))
 
-which(binaryRoutes%*%allELoss == max(binaryRoutes%*%allELoss))
-
-
+P[which(P[,n+1] == max(P[,n+1])),n+1]
