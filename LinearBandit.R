@@ -88,7 +88,7 @@ drawPaths <- function(pathSpeed = NULL, pathSize = NULL, iter = NULL){
   } else {
     
     if(!is.null(iter)){
-      mtext(paste("Iteration Number", iter), ,side = 1,line=1)
+      mtext(paste("Iteration Number", iter), side = 1,line=1)
     }
     
     
@@ -132,7 +132,7 @@ pull <- function(route, pSize, iter = NULL){
   
   routeObsLoss <- rep(NA, 33)
   
-  pSize <- pSize + route*.2
+  pSize <- pSize + route*.02
   
   drawPaths(pSpeed,pSize, iter)
   
@@ -150,7 +150,7 @@ pull <- function(route, pSize, iter = NULL){
     }
   }
   
-  return(list(loss = allObsLoss, size = pSize))
+  return(list(loss = allObsLoss, size = pSize, expectedLoss = allELoss))
   
 }
 
@@ -158,26 +158,72 @@ for(i in 1:100){
   
   arm <- sample(1:81, 1)
   pSize <- pull(binaryRoutes[arm,], pSize, i)$size
-  Sys.sleep(1)
+  Sys.sleep(.2)
   
 }
 
 library(MASS)
 
-P <- matrix(0, nrow = 81, ncol = 100)
+n <- 1000
+
+P <- matrix(0, nrow = 81, ncol = n)
 
 P[,1] <- rep(1/81,81)
 
-X <- matrix(0, nrow = 33, ncol = 100)
+X <- matrix(0, nrow = 33, ncol = n)
 
 X[,1] <- binaryRoutes[sample(1:81, 1, prob = P[,1]),]
+
+CL <- matrix(0, nrow = 81, ncol = n)
 
 Pt <- matrix(0, nrow = 33, ncol = 33)
 for(i in 1:81){
   Pt <- Pt + P[i,1]*outer(binaryRoutes[i,], binaryRoutes[i,]) 
 }
 
-ObsL <- pull(binaryRoutes[1,], pSize)$loss
+
+
+nu <- sqrt(log(81)/(3*n*33))
+
+pSize <- rep(.5,33)
+
+expectedLoss <- rep(0,33)
+
+for(i in 1:n){ 
+  X[,i] <- binaryRoutes[sample(1:81, 1, prob = P[,i]),]
+
+  out <- pull(X[,i], pSize, i)
   
-lest <- ginv(Pt) %*% outer(X[,1], X[,1]) %*% ObsL
+  ObsL <- out$loss
+  
+  pSize <- out$size
+  
+  lest <- (as.numeric(t(X[,1]) %*% ObsL)) * ginv(Pt) %*% X[,i]
+  
+  if(i > 1){
+    for(j in 1:81){
+      CL[j,i] <- CL[j,i-1] + binaryRoutes[j,]%*%lest
+    }
+    
+    for(j in 1:81){
+      P[j,i+1] <- exp(-nu*CL[j,i])/(sum(exp(-nu*CL[,i])))
+    }
+  } else {
+    for(j in 1:81){
+      CL[j,i] <- binaryRoutes[j,]%*%lest
+    }
+    
+    for(j in 1:81){
+      P[j,i+1] <- exp(-nu*CL[j,i])/(sum(exp(-nu*CL[,i])))
+    }
+  }
+  
+  Sys.sleep(.1)
+}
+
+
+which(P[,n] == max(P[,n]))
+
+which(binaryRoutes%*%allELoss == max(binaryRoutes%*%allELoss))
+
 
