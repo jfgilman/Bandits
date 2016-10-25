@@ -122,7 +122,17 @@ drawPaths <- function(pathSpeed = NULL, pathSize = NULL, iter = NULL){
   }
 }
 
+
+drawPaths()
+
 pSpeed <- sample(2:4,33, replace = T)
+
+drawPaths(pSpeed)
+
+
+
+
+
 pSize <- rep(.5,33)
 
 pull <- function(route, pSize, iter = NULL){
@@ -139,7 +149,7 @@ pull <- function(route, pSize, iter = NULL){
   }
   
   
-  for(i in 1:length(pathSpeed)){
+  for(i in 1:length(pSpeed)){
     if(pSpeed[i] == 3){
       allObsLoss[i] <- runif(1,.1,.5)
     } else if(pSpeed[i] == 4){
@@ -155,7 +165,7 @@ pull <- function(route, pSize, iter = NULL){
 
 expectedLoss <- c()
 
-for(i in 1:length(pathSpeed)){
+for(i in 1:length(pSpeed)){
   if(pSpeed[i] == 3){
     expectedLoss[i] <- .3
   } else if(pSpeed[i] == 4){
@@ -227,4 +237,4 @@ which(P[,n+1] == max(P[,n+1]))
 
 which(binaryRoutes%*%expectedLoss == min(binaryRoutes%*%expectedLoss))
 
-P[which(P[,n+1] == max(P[,n+1])),n+1]
+P[which(binaryRoutes%*%expectedLoss == min(binaryRoutes%*%expectedLoss)),n+1]
