@@ -5,58 +5,11 @@ setwd("~/GitHub/Bandits")
 # Linear Bandits simple example
 # Find the fastest path
 
-# 81 possible routes 
-# matrix of possible paths
-moveCombos <- expand.grid(c(1,2,3),c(4:12), c(13:21), c(22:30), c(31:33))
-br <- rep(0,nrow(moveCombos))
-badRows <- function(mat){
-  for(i in 1:nrow(mat)){
-    if(mat[i,1] == 1 && !(mat[i,2] %in% c(4,5,6))){
-      br[i] <- 1
-    } else if (mat[i,1] == 2 && !(mat[i,2] %in% c(7,8,9))){
-      br[i] <- 1
-    } else if (mat[i,1] == 3 && !(mat[i,2] %in% c(10,11,12))){
-      br[i] <- 1
-    }
-    
-    if(mat[i,2] %in% c(4,7,10) && !(mat[i,3] %in% c(13,14,15))){
-      br[i] <- 1
-    } else if (mat[i,2] %in% c(5,8,11) && !(mat[i,3] %in% c(16,17,18))){
-      br[i] <- 1
-    } else if (mat[i,2] %in% c(6,9,12) && !(mat[i,3] %in% c(19,20,21))){
-      br[i] <- 1
-    }
-    
-    if(mat[i,3] %in% c(13,16,19) && !(mat[i,4] %in% c(22,23,24))){
-      br[i] <- 1
-    } else if (mat[i,3] %in% c(14,17,20) && !(mat[i,4] %in% c(25,26,27))){
-      br[i] <- 1
-    } else if (mat[i,3] %in% c(15,18,21) && !(mat[i,4] %in% c(28,29,30))){
-      br[i] <- 1
-    }
-    
-    if(mat[i,4] %in% c(22,25,28) && !(mat[i,5] == 31)){
-      br[i] <- 1
-    } else if (mat[i,4] %in% c(23,26,29) && !(mat[i,5] == 32)){
-      br[i] <- 1
-    } else if (mat[i,4] %in% c(24,27,30) && !(mat[i,5] == 33)){
-      br[i] <- 1
-    }
-  }
-  return(br)
-}
-drop <- badRows(moveCombos)
-routes <- moveCombos[-which(drop == 1),]
-binaryRoutes <- matrix(0, nrow = 81, ncol = 33)
-for(i in 1:81){
-  for(j in 1:5){
-    binaryRoutes[i, routes[i,j]] <- 1
-  }
-}
-
+totalRouts <- 81
+totalPaths <- 33
 
 drawPaths <- function(pathSpeed = NULL,
-                      pathSize = rep(1,33),
+                      pathSize = rep(1,totalPaths),
                       iter = NULL, dash = NULL){
   
   par(oma=c(0,0,0,0), mar=c(4, 4, 2, 2))
@@ -101,7 +54,7 @@ drawPaths <- function(pathSpeed = NULL,
     
     
     if(is.null(pathSize)){
-      pathSize <- rep(1,33)
+      pathSize <- rep(1,totalPaths)
     }
     
     if(is.null(dash)){
@@ -163,7 +116,7 @@ drawPaths()
 
 # Randomly draw difficulty levels 
 # Fixed adversary
-pSpeed <- sample(2:4,33, replace = T)
+pSpeed <- sample(2:4,totalPaths, replace = T)
 
 # See paths with difficulty levels 
 # These are unknown to the agent 
@@ -175,11 +128,16 @@ pull <- function(route, pSize, iter = NULL){
   allObsLoss <- c()
   pSize <- pSize + route*.01
   
-  if(iter %% 10 == 0){
-    drawPaths(pSpeed,pSize, iter)
-    Sys.sleep(.1)
+  if(is.null(iter)){
+    drawPaths(pSpeed,pSize)
+  }else {
+    if(iter %% 10 == 0){
+      drawPaths(pSpeed,pSize, iter)
+      Sys.sleep(.1)
+    }
   }
-  
+
+  # each pull we draw new observed loss for each path
   for(i in 1:length(pSpeed)){
     if(pSpeed[i] == 3){
       allObsLoss[i] <- runif(1,.1,.5)
@@ -204,31 +162,76 @@ for(i in 1:length(pSpeed)){
   }
 }
 
+# creating binary matrix of possible paths
+moveCombos <- expand.grid(c(1,2,3),c(4:12), c(13:21), c(22:30), c(31:33))
+br <- rep(0,nrow(moveCombos))
+badRows <- function(mat){
+  for(i in 1:nrow(mat)){
+    if(mat[i,1] == 1 && !(mat[i,2] %in% c(4,5,6))){
+      br[i] <- 1
+    } else if (mat[i,1] == 2 && !(mat[i,2] %in% c(7,8,9))){
+      br[i] <- 1
+    } else if (mat[i,1] == 3 && !(mat[i,2] %in% c(10,11,12))){
+      br[i] <- 1
+    }
+    
+    if(mat[i,2] %in% c(4,7,10) && !(mat[i,3] %in% c(13,14,15))){
+      br[i] <- 1
+    } else if (mat[i,2] %in% c(5,8,11) && !(mat[i,3] %in% c(16,17,18))){
+      br[i] <- 1
+    } else if (mat[i,2] %in% c(6,9,12) && !(mat[i,3] %in% c(19,20,21))){
+      br[i] <- 1
+    }
+    
+    if(mat[i,3] %in% c(13,16,19) && !(mat[i,4] %in% c(22,23,24))){
+      br[i] <- 1
+    } else if (mat[i,3] %in% c(14,17,20) && !(mat[i,4] %in% c(25,26,27))){
+      br[i] <- 1
+    } else if (mat[i,3] %in% c(15,18,21) && !(mat[i,4] %in% c(28,29,30))){
+      br[i] <- 1
+    }
+    
+    if(mat[i,4] %in% c(22,25,28) && !(mat[i,5] == 31)){
+      br[i] <- 1
+    } else if (mat[i,4] %in% c(23,26,29) && !(mat[i,5] == 32)){
+      br[i] <- 1
+    } else if (mat[i,4] %in% c(24,27,30) && !(mat[i,5] == 33)){
+      br[i] <- 1
+    }
+  }
+  return(br)
+}
 
+drop <- badRows(moveCombos)
+routes <- moveCombos[-which(drop == 1),]
+binaryRoutes <- matrix(0, nrow = totalRouts, ncol = totalPaths)
+for(i in 1:totalRouts){
+  for(j in 1:5){
+    binaryRoutes[i, routes[i,j]] <- 1
+  }
+}
 ################################################################################
 ################################################################################
 # Simulations
 
-
 # Total number of iterations 
 n <- 5000
 # Matrix of updated probability vectors 
-P <- matrix(0, nrow = 81, ncol = n + 1)
+P <- matrix(0, nrow = totalRouts, ncol = n + 1)
 # Setting first column to be uniform
-P[,1] <- rep(1/81,81)
+P[,1] <- rep(1/totalRouts,totalRouts)
 # Matrix of choosen routes
-X <- matrix(0, nrow = 33, ncol = n)
+X <- matrix(0, nrow = totalPaths, ncol = n)
 # Matrix of cummulative loss
-CL <- matrix(0, nrow = 81, ncol = n)
+CL <- matrix(0, nrow = totalRouts, ncol = n)
 # exploration param
-nu <- sqrt(log(81)/(3*n*33))
+nu <- sqrt(log(totalRouts)/(3*n*totalPaths))
 
 # size to be adjusted during iterations
-pSize <- rep(.5,33)
+pSize <- rep(.5,totalPaths)
 expLosses <- c()
-
 for(i in 1:n){ 
-  routePicked <- sample(1:81, 1, prob = P[,i])
+  routePicked <- sample(1:totalRouts, 1, prob = P[,i])
   X[,i] <- binaryRoutes[routePicked,]
   
   expLosses[i] <- t(t(binaryRoutes)%*%P[,i])%*%expectedLoss
@@ -237,24 +240,24 @@ for(i in 1:n){
   ObsL <- out$loss
   pSize <- out$size
   
-  Pt <- matrix(0, nrow = 33, ncol = 33)
-  for(j in 1:81){
+  Pt <- matrix(0, nrow = totalPaths, ncol = totalPaths)
+  for(j in 1:totalRouts){
     Pt <- Pt + P[j,i]*outer(binaryRoutes[j,], binaryRoutes[j,]) 
   }
   lest <- ginv(Pt) %*% outer(X[,i], X[,i]) %*% ObsL
   
   if(i > 1){
-    for(j in 1:81){
+    for(j in 1:totalRouts){
       CL[j,i] <- CL[j,i-1] + binaryRoutes[j,]%*%lest
     }
-    for(j in 1:81){
+    for(j in 1:totalRouts){
       P[j,i+1] <- exp(-nu*CL[j,i])/(sum(exp(-nu*CL[,i])))
     }
   } else {
-    for(j in 1:81){
+    for(j in 1:totalRouts){
       CL[j,i] <- binaryRoutes[j,]%*%lest
     }
-    for(j in 1:81){
+    for(j in 1:totalRouts){
       P[j,i+1] <- exp(-nu*CL[j,i])/(sum(exp(-nu*CL[,i])))
     }
   }
@@ -275,7 +278,7 @@ for(i in 2:n){
 }
 bound <- function(n, d, N) 2*sqrt(3*n*d*log(N))
 
-plot(bound(1:5000, 33, 81), xlab = "Iteration",
+plot(bound(1:5000, totalPaths, totalRouts), xlab = "Iteration",
      ylab = "Pseudo-Regret", main = "Cummulative Pseudo-Regret", type = "l")
 lines(Regret, col = 2)
 legend(1, 3000, legend=c("Regret Bound", "Pseudo-Regret"),
@@ -286,19 +289,19 @@ legend(1, 3000, legend=c("Regret Bound", "Pseudo-Regret"),
 ################################################################################
 # random adversary
 
-P <- matrix(0, nrow = 81, ncol = n + 1)
-P[,1] <- rep(1/81,81)
-X <- matrix(0, nrow = 33, ncol = n)
-CL <- matrix(0, nrow = 81, ncol = n)
-nu <- sqrt(log(81)/(3*n*33))
-pSize <- rep(.5,33)
+P <- matrix(0, nrow = totalRouts, ncol = n + 1)
+P[,1] <- rep(1/totalRouts,totalRouts)
+X <- matrix(0, nrow = totalPaths, ncol = n)
+CL <- matrix(0, nrow = totalRouts, ncol = n)
+nu <- sqrt(log(totalRouts)/(3*n*totalPaths))
+pSize <- rep(.5,totalPaths)
 expLosses <- c()
-expSum <- rep(0,33)
+expSum <- rep(0,totalPaths)
 for(i in 1:n){ 
   # Now changing the speeds each time
-  pSpeed <- sample(2:4,33, replace = T)
+  pSpeed <- sample(2:4,totalPaths, replace = T)
   
-  routePicked <- sample(1:81, 1, prob = P[,i])
+  routePicked <- sample(1:totalRouts, 1, prob = P[,i])
   X[,i] <- binaryRoutes[routePicked,]
   
   expectedLoss <- c()
@@ -318,24 +321,24 @@ for(i in 1:n){
   ObsL <- out$loss
   pSize <- out$size
   
-  Pt <- matrix(0, nrow = 33, ncol = 33)
-  for(j in 1:81){
+  Pt <- matrix(0, nrow = totalPaths, ncol = totalPaths)
+  for(j in 1:totalRouts){
     Pt <- Pt + P[j,i]*outer(binaryRoutes[j,], binaryRoutes[j,]) 
   }
   lest <- ginv(Pt) %*% outer(X[,i], X[,i]) %*% ObsL
   
   if(i > 1){
-    for(j in 1:81){
+    for(j in 1:totalRouts){
       CL[j,i] <- CL[j,i-1] + binaryRoutes[j,]%*%lest
     }
-    for(j in 1:81){
+    for(j in 1:totalRouts){
       P[j,i+1] <- exp(-nu*CL[j,i])/(sum(exp(-nu*CL[,i])))
     }
   } else {
-    for(j in 1:81){
+    for(j in 1:totalRouts){
       CL[j,i] <- binaryRoutes[j,]%*%lest
     }
-    for(j in 1:81){
+    for(j in 1:totalRouts){
       P[j,i+1] <- exp(-nu*CL[j,i])/(sum(exp(-nu*CL[,i])))
     }
   }
@@ -350,7 +353,7 @@ for(i in 2:n){
 }
 bound <- function(n, d, N) 2*sqrt(3*n*d*log(N))
 
-plot(bound(1:5000, 33, 81), xlab = "Iteration",
+plot(bound(1:5000, totalPaths, totalRouts), xlab = "Iteration",
      ylab = "Pseudo-Regret", main = "Cummulative Pseudo-Regret", type = "l")
 lines(Regret, col = 2)
 legend(1, 2500, legend=c("Regret Bound", "Pseudo-Regret"),
@@ -360,21 +363,21 @@ legend(1, 2500, legend=c("Regret Bound", "Pseudo-Regret"),
 ################################################################################
 # random adversary some fixed paths
 
-P <- matrix(0, nrow = 81, ncol = n + 1)
-P[,1] <- rep(1/81,81)
-X <- matrix(0, nrow = 33, ncol = n)
-CL <- matrix(0, nrow = 81, ncol = n)
-nu <- sqrt(log(81)/(3*n*33))
-pSize <- rep(.5,33)
+P <- matrix(0, nrow = totalRouts, ncol = n + 1)
+P[,1] <- rep(1/totalRouts,totalRouts)
+X <- matrix(0, nrow = totalPaths, ncol = n)
+CL <- matrix(0, nrow = totalRouts, ncol = n)
+nu <- sqrt(log(totalRouts)/(3*n*totalPaths))
+pSize <- rep(.5,totalPaths)
 expLosses <- c()
-expSum <- rep(0,33)
+expSum <- rep(0,totalPaths)
 for(i in 1:n){ 
   
   # Now changing the speeds each time
   pSpeed <- c(sample(2:4,10, replace = T), 2, sample(2:4,8, replace = T),
               3,sample(2:4,6, replace = T), 3, sample(2:4,5, replace = T), 4)
   
-  routePicked <- sample(1:81, 1, prob = P[,i])
+  routePicked <- sample(1:totalRouts, 1, prob = P[,i])
   X[,i] <- binaryRoutes[routePicked,]
   
   expectedLoss <- c()
@@ -394,24 +397,24 @@ for(i in 1:n){
   ObsL <- out$loss
   pSize <- out$size
   
-  Pt <- matrix(0, nrow = 33, ncol = 33)
-  for(j in 1:81){
+  Pt <- matrix(0, nrow = totalPaths, ncol = totalPaths)
+  for(j in 1:totalRouts){
     Pt <- Pt + P[j,i]*outer(binaryRoutes[j,], binaryRoutes[j,]) 
   }
   lest <- ginv(Pt) %*% outer(X[,i], X[,i]) %*% ObsL
   
   if(i > 1){
-    for(j in 1:81){
+    for(j in 1:totalRouts){
       CL[j,i] <- CL[j,i-1] + binaryRoutes[j,]%*%lest
     }
-    for(j in 1:81){
+    for(j in 1:totalRouts){
       P[j,i+1] <- exp(-nu*CL[j,i])/(sum(exp(-nu*CL[,i])))
     }
   } else {
-    for(j in 1:81){
+    for(j in 1:totalRouts){
       CL[j,i] <- binaryRoutes[j,]%*%lest
     }
-    for(j in 1:81){
+    for(j in 1:totalRouts){
       P[j,i+1] <- exp(-nu*CL[j,i])/(sum(exp(-nu*CL[,i])))
     }
   }
@@ -426,7 +429,7 @@ for(i in 2:n){
 }
 bound <- function(n, d, N) 2*sqrt(3*n*d*log(N))
 
-plot(bound(1:5000, 33, 81), xlab = "Iteration",
+plot(bound(1:5000, totalPaths, totalRouts), xlab = "Iteration",
      ylab = "Pseudo-Regret", main = "Cummulative Pseudo-Regret", type = "l")
 lines(Regret, col = 2)
 legend(1, 2500, legend=c("Regret Bound", "Pseudo-Regret"),
@@ -449,16 +452,16 @@ for(j in 1:length(pSpeed)){
   }
 }
 
-P <- matrix(0, nrow = 81, ncol = n + 1)
-P[,1] <- rep(1/81,81)
-X <- matrix(0, nrow = 33, ncol = n)
-CL <- matrix(0, nrow = 81, ncol = n)
-nu <- sqrt(log(81)/(3*n*33))
-pSize <- rep(.5,33)
+P <- matrix(0, nrow = totalRouts, ncol = n + 1)
+P[,1] <- rep(1/totalRouts,totalRouts)
+X <- matrix(0, nrow = totalPaths, ncol = n)
+CL <- matrix(0, nrow = totalRouts, ncol = n)
+nu <- sqrt(log(totalRouts)/(3*n*totalPaths))
+pSize <- rep(.5,totalPaths)
 expLosses <- c()
 for(i in 1:n){ 
   
-  routePicked <- sample(1:81, 1, prob = P[,i])
+  routePicked <- sample(1:totalRouts, 1, prob = P[,i])
   X[,i] <- binaryRoutes[routePicked,]
   
   expLosses[i] <- t(t(binaryRoutes)%*%P[,i])%*%expectedLoss
@@ -467,24 +470,24 @@ for(i in 1:n){
   ObsL <- out$loss
   pSize <- out$size
   
-  Pt <- matrix(0, nrow = 33, ncol = 33)
-  for(j in 1:81){
+  Pt <- matrix(0, nrow = totalPaths, ncol = totalPaths)
+  for(j in 1:totalRouts){
     Pt <- Pt + P[j,i]*outer(binaryRoutes[j,], binaryRoutes[j,]) 
   }
   lest <- ginv(Pt) %*% outer(X[,i], X[,i]) %*% ObsL
   
   if(i > 1){
-    for(j in 1:81){
+    for(j in 1:totalRouts){
       CL[j,i] <- CL[j,i-1] + binaryRoutes[j,]%*%lest
     }
-    for(j in 1:81){
+    for(j in 1:totalRouts){
       P[j,i+1] <- exp(-nu*CL[j,i])/(sum(exp(-nu*CL[,i])))
     }
   } else {
-    for(j in 1:81){
+    for(j in 1:totalRouts){
       CL[j,i] <- binaryRoutes[j,]%*%lest
     }
-    for(j in 1:81){
+    for(j in 1:totalRouts){
       P[j,i+1] <- exp(-nu*CL[j,i])/(sum(exp(-nu*CL[,i])))
     }
   }
@@ -498,7 +501,7 @@ for(i in 2:n){
 }
 bound <- function(n, d, N) 2*sqrt(3*n*d*log(N))
 
-plot(bound(1:5000, 33, 81), xlab = "Iteration",
+plot(bound(1:5000, totalPaths, totalRouts), xlab = "Iteration",
      ylab = "Pseudo-Regret", main = "Cummulative Pseudo-Regret", type = "l")
 lines(Regret, col = 2)
 legend(1, 2500, legend=c("Regret Bound", "Pseudo-Regret"),
