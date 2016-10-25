@@ -276,7 +276,7 @@ for(i in 2:n){
 bound <- function(n, d, N) 2*sqrt(3*n*d*log(N))
 
 plot(bound(1:5000, 33, 81), xlab = "Iteration",
-     ylab = "Regret", main = "Cummulative Pseudo-Regret", type = "l")
+     ylab = "Pseudo-Regret", main = "Cummulative Pseudo-Regret", type = "l")
 lines(Regret, col = 2)
 
 
@@ -349,7 +349,7 @@ for(i in 2:n){
 bound <- function(n, d, N) 2*sqrt(3*n*d*log(N))
 
 plot(bound(1:5000, 33, 81), xlab = "Iteration",
-     ylab = "Regret", main = "Cummulative Pseudo-Regret", type = "l")
+     ylab = "Pseudo-Regret", main = "Cummulative Pseudo-Regret", type = "l")
 lines(Regret, col = 2)
 
 
@@ -424,7 +424,7 @@ for(i in 2:n){
 bound <- function(n, d, N) 2*sqrt(3*n*d*log(N))
 
 plot(bound(1:5000, 33, 81), xlab = "Iteration",
-     ylab = "Regret", main = "Cummulative Pseudo-Regret", type = "l")
+     ylab = "Pseudo-Regret", main = "Cummulative Pseudo-Regret", type = "l")
 lines(Regret, col = 2)
 
 
@@ -495,7 +495,7 @@ for(i in 2:n){
 bound <- function(n, d, N) 2*sqrt(3*n*d*log(N))
 
 plot(bound(1:5000, 33, 81), xlab = "Iteration",
-     ylab = "Regret", main = "Cummulative Pseudo-Regret", type = "l")
+     ylab = "Pseudo-Regret", main = "Cummulative Pseudo-Regret", type = "l")
 lines(Regret, col = 2)
 
 
