@@ -274,7 +274,7 @@ for(i in 2:n){
 bound <- function(n, d, N) 2*sqrt(3*n*d*log(N))
 
 plot(bound(1:5000, 33, 81), xlab = "Iteration",
-     ylab = "Regret", main = "Cummulative Pseudo-Regret")
+     ylab = "Regret", main = "Cummulative Pseudo-Regret", type = "l")
 lines(Regret, col = 2)
 
 
@@ -347,7 +347,7 @@ for(i in 2:n){
 bound <- function(n, d, N) 2*sqrt(3*n*d*log(N))
 
 plot(bound(1:5000, 33, 81), xlab = "Iteration",
-     ylab = "Regret", main = "Cummulative Pseudo-Regret")
+     ylab = "Regret", main = "Cummulative Pseudo-Regret", type = "l")
 lines(Regret, col = 2)
 
 
@@ -422,7 +422,79 @@ for(i in 2:n){
 bound <- function(n, d, N) 2*sqrt(3*n*d*log(N))
 
 plot(bound(1:5000, 33, 81), xlab = "Iteration",
-     ylab = "Regret", main = "Cummulative Pseudo-Regret")
+     ylab = "Regret", main = "Cummulative Pseudo-Regret", type = "l")
 lines(Regret, col = 2)
+
+
+################################################################################
+################################################################################
+# Lets try and get worst case
+
+pSpeed <- c(3,2,2,3,rep(2,8),3,rep(2,8),3,rep(2,8),3,rep(2,2))
+
+expectedLoss <- c()
+for(j in 1:length(pSpeed)){
+  if(pSpeed[j] == 3){
+    expectedLoss[j] <- .3
+  } else if(pSpeed[j] == 4){
+    expectedLoss[j] <- .55
+  } else {
+    expectedLoss[j] <- .8
+  }
+}
+
+P <- matrix(0, nrow = 81, ncol = n + 1)
+P[,1] <- rep(1/81,81)
+X <- matrix(0, nrow = 33, ncol = n)
+CL <- matrix(0, nrow = 81, ncol = n)
+nu <- sqrt(log(81)/(3*n*33))
+pSize <- rep(.5,33)
+expLosses <- c()
+for(i in 1:n){ 
+  
+  routePicked <- sample(1:81, 1, prob = P[,i])
+  X[,i] <- binaryRoutes[routePicked,]
+  
+  expLosses[i] <- t(t(binaryRoutes)%*%P[,i])%*%expectedLoss
+  
+  out <- pull(X[,i], pSize, i)
+  ObsL <- out$loss
+  pSize <- out$size
+  
+  Pt <- matrix(0, nrow = 33, ncol = 33)
+  for(j in 1:81){
+    Pt <- Pt + P[j,i]*outer(binaryRoutes[j,], binaryRoutes[j,]) 
+  }
+  lest <- ginv(Pt) %*% outer(X[,i], X[,i]) %*% ObsL
+  
+  if(i > 1){
+    for(j in 1:81){
+      CL[j,i] <- CL[j,i-1] + binaryRoutes[j,]%*%lest
+    }
+    for(j in 1:81){
+      P[j,i+1] <- exp(-nu*CL[j,i])/(sum(exp(-nu*CL[,i])))
+    }
+  } else {
+    for(j in 1:81){
+      CL[j,i] <- binaryRoutes[j,]%*%lest
+    }
+    for(j in 1:81){
+      P[j,i+1] <- exp(-nu*CL[j,i])/(sum(exp(-nu*CL[,i])))
+    }
+  }
+}
+
+Regret <- c()
+best <- min(binaryRoutes%*%expectedLoss)
+Regret[1] <- expLosses[1] - best
+for(i in 2:n){
+  Regret[i] <- Regret[i-1] + expLosses[i] - best
+}
+bound <- function(n, d, N) 2*sqrt(3*n*d*log(N))
+
+plot(bound(1:5000, 33, 81), xlab = "Iteration",
+     ylab = "Regret", main = "Cummulative Pseudo-Regret", type = "l")
+lines(Regret, col = 2)
+
 
 
