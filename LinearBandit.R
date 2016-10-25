@@ -278,6 +278,8 @@ bound <- function(n, d, N) 2*sqrt(3*n*d*log(N))
 plot(bound(1:5000, 33, 81), xlab = "Iteration",
      ylab = "Pseudo-Regret", main = "Cummulative Pseudo-Regret", type = "l")
 lines(Regret, col = 2)
+legend(1, 3000, legend=c("Regret Bound", "Pseudo-Regret"),
+       col=c("black", "red"),lty = 1, cex=1)
 
 
 ################################################################################
@@ -351,7 +353,8 @@ bound <- function(n, d, N) 2*sqrt(3*n*d*log(N))
 plot(bound(1:5000, 33, 81), xlab = "Iteration",
      ylab = "Pseudo-Regret", main = "Cummulative Pseudo-Regret", type = "l")
 lines(Regret, col = 2)
-
+legend(1, 2500, legend=c("Regret Bound", "Pseudo-Regret"),
+       col=c("black", "red"),lty = 1, cex=1)
 
 ################################################################################
 ################################################################################
@@ -426,7 +429,8 @@ bound <- function(n, d, N) 2*sqrt(3*n*d*log(N))
 plot(bound(1:5000, 33, 81), xlab = "Iteration",
      ylab = "Pseudo-Regret", main = "Cummulative Pseudo-Regret", type = "l")
 lines(Regret, col = 2)
-
+legend(1, 2500, legend=c("Regret Bound", "Pseudo-Regret"),
+       col=c("black", "red"),lty = 1, cex=1)
 
 ################################################################################
 ################################################################################
@@ -497,6 +501,7 @@ bound <- function(n, d, N) 2*sqrt(3*n*d*log(N))
 plot(bound(1:5000, 33, 81), xlab = "Iteration",
      ylab = "Pseudo-Regret", main = "Cummulative Pseudo-Regret", type = "l")
 lines(Regret, col = 2)
-
+legend(1, 2500, legend=c("Regret Bound", "Pseudo-Regret"),
+       col=c("black", "red"),lty = 1, cex=1)
 
 
