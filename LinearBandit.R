@@ -38,6 +38,8 @@ drawPaths <- function(pathSpeed = NULL,
   text(1,2.5,"Start")
   text(6,2.5,"Finish")
   
+  arrows(2.8,3.5,4.2,3.5, col = 2, lwd = 2)
+  
   if(is.null(pathSpeed)){
     for(i in 1:(nrow(nodes)-1)){
       segments(nodes[i,1],nodes[i,2], nodes[i,1]+1, 2)
