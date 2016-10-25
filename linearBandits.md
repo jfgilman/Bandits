@@ -37,7 +37,9 @@ Challenge: 5,000 kids to $5,000
 - Sending one kid at a time you choose their path
 - 81 different paths
 - Each path is a linear combination of 5 obstacles
-- **Fastest team wins!**
+- **Slowest team pays the fastest team $5,000**
+
+Since you all are risk averse, like most people, you want to bound your regret.
 
 Strategy: Exp2 with John's Exploration
 =================================================================

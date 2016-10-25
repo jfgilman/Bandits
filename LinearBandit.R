@@ -1,4 +1,6 @@
+
 library(MASS)
+setwd("~/GitHub/Bandits")
 
 # Linear Bandits simple example
 # Find the fastest path
