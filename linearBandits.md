@@ -25,8 +25,19 @@ $$
 $$
 (Expectation with respect to the forecaster's internal randomization)  
 
-Example: Online Routing Problem
+Example: Obstacle Course Problem
 =================================================================
+![alt text](obsticalcourse.jpg)
+
+
+Challenge: 5,000 kids to $5,000
+=================================================================
+- 33 obstacles with varying difficulty levels 
+- Each kid must complete 5
+- Sending one kid at a time you choose their path
+- 81 different paths
+- Each path is a linear combination of 5 obstacles
+- **Fastest team wins!**
 
 Strategy: Exp2 with John's Exploration
 =================================================================

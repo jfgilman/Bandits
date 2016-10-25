@@ -1,4 +1,7 @@
 
+library(MASS)
+
+
 # Linear Bandits simple example
 # Find the fastest path
 
@@ -52,7 +55,7 @@ for(i in 1:81){
 }
 
 
-drawPaths <- function(pathSpeed = NULL, pathSize = NULL, iter = NULL){
+drawPaths <- function(pathSpeed = NULL, pathSize = rep(1,33), iter = NULL, dash = NULL){
   
   par(oma=c(0,0,0,0), mar=c(4, 4, 2, 2))
   plot(1,2,type="n",axes=FALSE,ann=FALSE,
@@ -77,6 +80,9 @@ drawPaths <- function(pathSpeed = NULL, pathSize = NULL, iter = NULL){
   points(1,2, pch=15, cex = 2)
   points(6,2,col=5,pch=15, cex = 2)
   
+  text(1,2.5,"Start")
+  text(6,2.5,"Finish")
+  
   if(is.null(pathSpeed)){
     for(i in 1:(nrow(nodes)-1)){
       segments(nodes[i,1],nodes[i,2], nodes[i,1]+1, 2)
@@ -96,58 +102,81 @@ drawPaths <- function(pathSpeed = NULL, pathSize = NULL, iter = NULL){
       pathSize <- rep(1,33)
     }
     
-    pathNum <- 1
-    for(i in 1:(nrow(nodes)-1)){
-      if(i < 11){
-        segments(nodes[i,1],nodes[i,2], nodes[i,1]+1, 1,
-                 col = pathSpeed[pathNum], lwd = pathSize[pathNum])
-        pathNum = pathNum + 1
-        
-        segments(nodes[i,1],nodes[i,2], nodes[i,1]+1, 2,
-                 col = pathSpeed[pathNum], lwd = pathSize[pathNum])
-        pathNum = pathNum + 1
-        
-        segments(nodes[i,1],nodes[i,2], nodes[i,1]+1, 3,
-                 col = pathSpeed[pathNum], lwd = pathSize[pathNum])
-        pathNum = pathNum + 1
-        
-      } else{
-        segments(nodes[i,1],nodes[i,2], nodes[i,1]+1, 2,
-                 col = pathSpeed[pathNum], lwd = pathSize[pathNum])
-        pathNum = pathNum + 1
+    if(is.null(dash)){
+      pathNum <- 1
+      for(i in 1:(nrow(nodes)-1)){
+        if(i < 11){
+          segments(nodes[i,1],nodes[i,2], nodes[i,1]+1, 1,
+                   col = pathSpeed[pathNum], lwd = pathSize[pathNum])
+          pathNum = pathNum + 1
+          
+          segments(nodes[i,1],nodes[i,2], nodes[i,1]+1, 2,
+                   col = pathSpeed[pathNum], lwd = pathSize[pathNum])
+          pathNum = pathNum + 1
+          
+          segments(nodes[i,1],nodes[i,2], nodes[i,1]+1, 3,
+                   col = pathSpeed[pathNum], lwd = pathSize[pathNum])
+          pathNum = pathNum + 1
+          
+        } else{
+          segments(nodes[i,1],nodes[i,2], nodes[i,1]+1, 2,
+                   col = pathSpeed[pathNum], lwd = pathSize[pathNum])
+          pathNum = pathNum + 1
+        }
+      }
+    } else {
+      pathNum <- 1
+      for(i in 1:(nrow(nodes)-1)){
+        if(i < 11){
+          segments(nodes[i,1],nodes[i,2], nodes[i,1]+1, 1, lty = dash[pathNum]*2 + 1,
+                   col = pathSpeed[pathNum], lwd = pathSize[pathNum])
+          pathNum = pathNum + 1
+          
+          segments(nodes[i,1],nodes[i,2], nodes[i,1]+1, 2, lty = dash[pathNum]*2 + 1,
+                   col = pathSpeed[pathNum], lwd = pathSize[pathNum])
+          pathNum = pathNum + 1
+          
+          segments(nodes[i,1],nodes[i,2], nodes[i,1]+1, 3, lty = dash[pathNum]*2 + 1,
+                   col = pathSpeed[pathNum], lwd = pathSize[pathNum])
+          pathNum = pathNum + 1
+          
+        } else{
+          segments(nodes[i,1],nodes[i,2], nodes[i,1]+1, 2, lty = dash[pathNum]*2 + 1,
+                   col = pathSpeed[pathNum], lwd = pathSize[pathNum])
+          pathNum = pathNum + 1
+        }
       }
     }
+    
+
     legend(1, 3.5, legend=c("Slow", "Moderate", "Fast"),
            col=c("red", "blue", "Green"),lty = 1, cex=1)
   }
 }
 
-
+################################################################################
+################################################################################
+# Draw the course 
 drawPaths()
 
+# Randomly draw difficulty levels 
+# Fixed adversary
 pSpeed <- sample(2:4,33, replace = T)
 
+# See paths with difficulty levels 
+# These are unknown to the agent 
 drawPaths(pSpeed)
 
-
-
-
-
-pSize <- rep(.5,33)
-
+# Pull function takes in a choosen route and returns the observed loss
 pull <- function(route, pSize, iter = NULL){
   
   allObsLoss <- c()
-  
-  routeObsLoss <- rep(NA, 33)
-  
   pSize <- pSize + route*.01
   
   if(iter %% 10 == 0){
     drawPaths(pSpeed,pSize, iter)
     Sys.sleep(.1)
   }
-  
   
   for(i in 1:length(pSpeed)){
     if(pSpeed[i] == 3){
@@ -158,13 +187,11 @@ pull <- function(route, pSize, iter = NULL){
       allObsLoss[i] <- runif(1,.6,1)
     }
   }
-  
   return(list(loss = allObsLoss, size = pSize))
-  
 }
 
+# Expected loss for Pseudo-regret calculations
 expectedLoss <- c()
-
 for(i in 1:length(pSpeed)){
   if(pSpeed[i] == 3){
     expectedLoss[i] <- .3
@@ -176,39 +203,41 @@ for(i in 1:length(pSpeed)){
 }
 
 
-library(MASS)
+################################################################################
+################################################################################
+# Simulations
 
+
+# Total number of iterations 
 n <- 5000
-
+# Matrix of updated probability vectors 
 P <- matrix(0, nrow = 81, ncol = n + 1)
-
+# Setting first column to be uniform
 P[,1] <- rep(1/81,81)
-
+# Matrix of choosen routes
 X <- matrix(0, nrow = 33, ncol = n)
-
-X[,1] <- binaryRoutes[sample(1:81, 1, prob = P[,1]),]
-
+# Matrix of cummulative loss
 CL <- matrix(0, nrow = 81, ncol = n)
-
-
+# exploration param
 nu <- sqrt(log(81)/(3*n*33))
 
+# size to be adjusted during iterations
 pSize <- rep(.5,33)
-
+expLosses <- c()
 for(i in 1:n){ 
-  X[,i] <- binaryRoutes[sample(1:81, 1, prob = P[,i]),]
+  routePicked <- sample(1:81, 1, prob = P[,i])
+  X[,i] <- binaryRoutes[routePicked,]
+  
+  expLosses[i] <- X[,i]%*%expectedLoss
 
   out <- pull(X[,i], pSize, i)
-  
   ObsL <- out$loss
-  
   pSize <- out$size
   
   Pt <- matrix(0, nrow = 33, ncol = 33)
   for(j in 1:81){
     Pt <- Pt + P[j,i]*outer(binaryRoutes[j,], binaryRoutes[j,]) 
   }
-  
   
   lest <- ginv(Pt) %*% outer(X[,i], X[,i]) %*% ObsL
   
@@ -229,12 +258,26 @@ for(i in 1:n){
       P[j,i+1] <- exp(-nu*CL[j,i])/(sum(exp(-nu*CL[,i])))
     }
   }
-  
-
 }
 
 which(P[,n+1] == max(P[,n+1]))
-
 which(binaryRoutes%*%expectedLoss == min(binaryRoutes%*%expectedLoss))
 
 P[which(binaryRoutes%*%expectedLoss == min(binaryRoutes%*%expectedLoss)),n+1]
+
+drawPaths(pSpeed,pSize, 5000, binaryRoutes[which(P[,n+1] == max(P[,n+1])),])
+
+Regret <- c()
+best <- min(binaryRoutes%*%expectedLoss)
+Regret[1] <- expLosses[1] - best
+for(i in 2:n){
+  Regret[i] <- Regret[i-1] + expLosses[i] - best
+}
+bound <- function(n, d, N) 2*sqrt(3*n*d*log(N))
+
+plot(bound(1:5000, 33, 81), xlab = "Iteration", ylab = "Regret", main = "Cummulative Pseudo-Regret")
+lines(Regret, col = 2)
+
+
+
+
