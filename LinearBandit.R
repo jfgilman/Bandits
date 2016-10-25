@@ -1,7 +1,6 @@
 
 library(MASS)
 
-
 # Linear Bandits simple example
 # Find the fastest path
 
@@ -55,7 +54,9 @@ for(i in 1:81){
 }
 
 
-drawPaths <- function(pathSpeed = NULL, pathSize = rep(1,33), iter = NULL, dash = NULL){
+drawPaths <- function(pathSpeed = NULL,
+                      pathSize = rep(1,33),
+                      iter = NULL, dash = NULL){
   
   par(oma=c(0,0,0,0), mar=c(4, 4, 2, 2))
   plot(1,2,type="n",axes=FALSE,ann=FALSE,
@@ -275,9 +276,175 @@ for(i in 2:n){
 }
 bound <- function(n, d, N) 2*sqrt(3*n*d*log(N))
 
-plot(bound(1:5000, 33, 81), xlab = "Iteration", ylab = "Regret", main = "Cummulative Pseudo-Regret")
+plot(bound(1:5000, 33, 81), xlab = "Iteration",
+     ylab = "Regret", main = "Cummulative Pseudo-Regret")
 lines(Regret, col = 2)
 
 
+################################################################################
+################################################################################
+# random adversary
+
+
+P <- matrix(0, nrow = 81, ncol = n + 1)
+# Setting first column to be uniform
+P[,1] <- rep(1/81,81)
+# Matrix of choosen routes
+X <- matrix(0, nrow = 33, ncol = n)
+# Matrix of cummulative loss
+CL <- matrix(0, nrow = 81, ncol = n)
+# exploration param
+nu <- sqrt(log(81)/(3*n*33))
+
+# size to be adjusted during iterations
+pSize <- rep(.5,33)
+expLosses <- c()
+best <- c()
+for(i in 1:n){ 
+  
+  # Now changing the speeds each time
+  pSpeed <- sample(2:4,33, replace = T)
+  
+  routePicked <- sample(1:81, 1, prob = P[,i])
+  X[,i] <- binaryRoutes[routePicked,]
+  
+  expectedLoss <- c()
+  for(j in 1:length(pSpeed)){
+    if(pSpeed[j] == 3){
+      expectedLoss[j] <- .3
+    } else if(pSpeed[j] == 4){
+      expectedLoss[j] <- .55
+    } else {
+      expectedLoss[j] <- .8
+    }
+  }
+  
+  expLosses[i] <- X[,i]%*%expectedLoss
+  best[i] <- min(binaryRoutes%*%expectedLoss)
+
+  out <- pull(X[,i], pSize, i)
+  ObsL <- out$loss
+  pSize <- out$size
+  
+  Pt <- matrix(0, nrow = 33, ncol = 33)
+  for(j in 1:81){
+    Pt <- Pt + P[j,i]*outer(binaryRoutes[j,], binaryRoutes[j,]) 
+  }
+  
+  lest <- ginv(Pt) %*% outer(X[,i], X[,i]) %*% ObsL
+  
+  if(i > 1){
+    for(j in 1:81){
+      CL[j,i] <- CL[j,i-1] + binaryRoutes[j,]%*%lest
+    }
+    
+    for(j in 1:81){
+      P[j,i+1] <- exp(-nu*CL[j,i])/(sum(exp(-nu*CL[,i])))
+    }
+  } else {
+    for(j in 1:81){
+      CL[j,i] <- binaryRoutes[j,]%*%lest
+    }
+    
+    for(j in 1:81){
+      P[j,i+1] <- exp(-nu*CL[j,i])/(sum(exp(-nu*CL[,i])))
+    }
+  }
+}
+
+Regret <- c()
+Regret[1] <- expLosses[1] - best[1]
+for(i in 2:n){
+  Regret[i] <- Regret[i-1] + expLosses[i] - best[i]
+}
+bound <- function(n, d, N) 2*sqrt(3*n*d*log(N))
+
+plot(bound(1:5000, 33, 81), xlab = "Iteration",
+     ylab = "Regret", main = "Cummulative Pseudo-Regret")
+lines(Regret, col = 2)
+
+
+
+################################################################################
+################################################################################
+# random adversary some fixed paths
+
+
+P <- matrix(0, nrow = 81, ncol = n + 1)
+# Setting first column to be uniform
+P[,1] <- rep(1/81,81)
+# Matrix of choosen routes
+X <- matrix(0, nrow = 33, ncol = n)
+# Matrix of cummulative loss
+CL <- matrix(0, nrow = 81, ncol = n)
+# exploration param
+nu <- sqrt(log(81)/(3*n*33))
+
+# size to be adjusted during iterations
+pSize <- rep(.5,33)
+expLosses <- c()
+best <- c()
+for(i in 1:n){ 
+  
+  # Now changing the speeds each time
+  pSpeed <- c(sample(2:4,10, replace = T), 2, sample(2:4,8, replace = T),
+              3,sample(2:4,6, replace = T), 3, sample(2:4,5, replace = T), 4)
+  
+  routePicked <- sample(1:81, 1, prob = P[,i])
+  X[,i] <- binaryRoutes[routePicked,]
+  
+  expectedLoss <- c()
+  for(j in 1:length(pSpeed)){
+    if(pSpeed[j] == 3){
+      expectedLoss[j] <- .3
+    } else if(pSpeed[j] == 4){
+      expectedLoss[j] <- .55
+    } else {
+      expectedLoss[j] <- .8
+    }
+  }
+  expLosses[i] <- X[,i]%*%expectedLoss
+  best[i] <- min(binaryRoutes%*%expectedLoss)
+  
+  out <- pull(X[,i], pSize, i)
+  ObsL <- out$loss
+  pSize <- out$size
+  
+  Pt <- matrix(0, nrow = 33, ncol = 33)
+  for(j in 1:81){
+    Pt <- Pt + P[j,i]*outer(binaryRoutes[j,], binaryRoutes[j,]) 
+  }
+  
+  lest <- ginv(Pt) %*% outer(X[,i], X[,i]) %*% ObsL
+  
+  if(i > 1){
+    for(j in 1:81){
+      CL[j,i] <- CL[j,i-1] + binaryRoutes[j,]%*%lest
+    }
+    
+    for(j in 1:81){
+      P[j,i+1] <- exp(-nu*CL[j,i])/(sum(exp(-nu*CL[,i])))
+    }
+  } else {
+    for(j in 1:81){
+      CL[j,i] <- binaryRoutes[j,]%*%lest
+    }
+    
+    for(j in 1:81){
+      P[j,i+1] <- exp(-nu*CL[j,i])/(sum(exp(-nu*CL[,i])))
+    }
+  }
+}
+
+Regret <- c()
+Regret[1] <- expLosses[1] - best[1]
+for(i in 2:n){
+  Regret[i] <- Regret[i-1] + expLosses[i] - best[i]
+}
+bound <- function(n, d, N) 2*sqrt(3*n*d*log(N))
+
+plot(bound(1:5000, 33, 81), xlab = "Iteration",
+     ylab = "Regret", main = "Cummulative Pseudo-Regret")
+lines(Regret, col = 2)
 
 
