@@ -18,7 +18,8 @@ Linear Bandit Set-up
 - **Game**: At each round $t = 1,2,\dots,n$
   1. Player choose $x_t \in \mathcal{K}$
   2. Adversary choose $l_t \in \mathcal{L}$
-  3. At the end of round $t$, player observe loss $\langle x_t,l_t\rangle=x_t^Tl_t$
+  3. At the end of round $t$, player observe loss $\langle x_t,l_t\rangle=x_t^Tl_t$  
+**We are assuming bandit feedback**:  Only observe the total loss$\langle x_t,l_t\rangle=x_t^Tl_t$, not $l_t$
 - **Pseudo-regret**
 $$
 \bar{R}_n = \mathbb{E}\sum_{t=1}^n x_t^Tl_t - \underset{x\in\mathcal{K}}{\mathrm{min}}\mathbb{E}\sum_{t=1}^n  x^Tl_t
@@ -41,10 +42,18 @@ Challenge: 5,000 kids to $5,000
 
 Since you are all risk averse, like most people, you want to bound your regret.
 
-Strategy: Exp2 with John's Exploration
+Strategy: Exp2 with exploration
 =================================================================
 Need a non-deterministic strategy to play against the adversary.  
-- **Exp**anded **Exp**onential with John's Exploration
+
+Exp2 -  **Exp**anded **Exp**onential - mix Exponential weight with some exploratory distributin $\mu$: 
+  $$
+  p_{t+1}(x) = (1-\gamma)\frac{\mathrm{exp}[-\eta \tilde{L}_t(x)]}{\sum_{y\in \mathcal{K}}\mathrm{exp}[-\eta \tilde{L}_t(y)]}+\gamma\mu
+  $$
+where $\tilde{L}_t(x) = \sum_{s=1}^{t}\langle x_,\tilde{l}_s\rangle$.
+
+Strategy: Exp2 with John's Exploration
+=================================================================
 - **Bounded scalar loss** assumption:
   1. $\mathcal{K}$ and $\mathcal{L}$ are such that $\lvert x^Tl \rvert \le 1, \forall (x,y)\in \mathcal{K}\times \mathcal{L}$
   2. $\mathcal{K}$ is finite with $\lvert \mathcal{K}\rvert = N$ and $\mathcal{K}$ spans $\mathbb{R}^d$
@@ -102,4 +111,10 @@ $$
 \bar{R_n} \le 2\sqrt{3nd\mathrm{ln}{N}}
 $$
 
-*Proof*: See the script.
+*Proof*: See the hand-out.
+
+Computational issue
+========================================================
+- Hard to compute the John's ellipsoid.
+- Sampling from exponential weight distribution is difficult.  
+- Will talk about another promising approach based on the ideas from convex optimizaton: **Online Mirror Descent**. Next time.
