@@ -39,7 +39,7 @@ Challenge: 5,000 kids to $5,000
 - Each path is a linear combination of 5 obstacles
 - **Slowest team pays the fastest team $5,000**
 
-Since you all are risk averse, like most people, you want to bound your regret.
+Since you are all risk averse, like most people, you want to bound your regret.
 
 Strategy: Exp2 with John's Exploration
 =================================================================
